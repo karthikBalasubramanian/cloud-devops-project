@@ -14,6 +14,27 @@ install:
 	# This should be run from inside a virtualenv
 	pip install --upgrade pip &&\
 		pip install -r requirements.txt
+db-dev:
+	docker build ./scripts --tag my_postgres
+	docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=root -e POSTGRES_DB=postgres --name my_postgres my_postgres
+	sleep 10
+	docker exec -e PGPASSWORD=password -it my_postgres  psql -h 127.0.0.1 -p 5432 --user root --dbname postgres
+
+db:
+	docker network create mynet
+	docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=root -e POSTGRES_DB=postgres --net mynet --name my_postgres kabalasu/my_postgres
+	sleep 10
+	docker exec -e PGPASSWORD=password -it my_postgres  psql -h 127.0.0.1 -p 5432 --user root --dbname postgres
+
+db-teardown:
+	docker container stop my_postgres
+	docker container rm my_postgres
+app:
+	docker run -it -p 8000:80 --net mynet --name translator translator
+
+app-teardown:
+	docker container stop translator
+	docker container rm translator
 
 test:
 	# Additional, optional, tests could go here
