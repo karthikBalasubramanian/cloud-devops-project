@@ -12,8 +12,7 @@ setup:
 
 install:
 	# This should be run from inside a virtualenv
-	. ~/.devops/bin/activate && pip install --upgrade pip &&\
-		pip install -r requirements.txt
+	. ~/.devops/bin/activate && pip install -r requirements.txt
 
 app-build:
 	docker build . --tag translator
