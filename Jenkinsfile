@@ -20,8 +20,9 @@ pipeline {
     }
     stage('Login to dockerhub') {
       steps {
-        withCredentials([string(credentialsId: 'dockerhub', variable: 'DOCKERHUBPWD')]) {
-          sh 'docker login -u kabalasu -p $DOCKERHUBPWD'
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub',
+                    usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+          sh 'docker login -u $USERNAME -p $PASSWORD'
         }
       }
     }
