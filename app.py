@@ -3,8 +3,6 @@ import logging
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask.logging import create_logger
-from sqlalchemy import text
-from sqlalchemy.exc import ResourceClosedError
 from googletrans import Translator
 
 
@@ -38,13 +36,13 @@ def translate():
     # Logging the input payload
     json_payload = request.json
     my_word = json_payload['word']
-    LOG.info("Word to be translated: \n%s" % my_word)
+    LOG.info(f"Word to be translated: \n{my_word}")
 
     sql = f"select * from translation.translator where origin='{my_word}';"
     result = db.engine.execute(sql)
     result = result.fetchall()
     if len(result) > 0:
-        LOG.info("Results: \n%s" % result)
+        LOG.info(f"Results: \n{result}")
         json_result = [{column: value for column, value in rowproxy.items()}
                        for rowproxy in result]
     else:
