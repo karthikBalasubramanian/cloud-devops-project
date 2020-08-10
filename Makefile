@@ -50,7 +50,7 @@ app-teardown:
 lint:
 	# See local hadolint install instructions:   https://github.com/hadolint/hadolint
 	# This is linter for Dockerfiles
-	sudo hadolint Dockerfile
+	# hadolint Dockerfile
 	# This is a linter for Python source code linter: https://www.pylint.org/
 	# This should be run from inside a virtualenv
 	. ~/.devops/bin/activate && pylint --disable=R,C,W,E1101 app.py
