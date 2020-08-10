@@ -14,8 +14,20 @@ install:
 	# This should be run from inside a virtualenv
 	pip install --upgrade pip &&\
 		pip install -r requirements.txt
-db-dev:
+
+app-build:
+	docker build . --tag translator
+	docker tag translator kabalasu/translator
+
+db-build:
 	docker build ./scripts --tag my_postgres
+	docker tag my_postgres kabalasu/my_postgres
+
+upload:
+	docker push kabalasu/my_postgres
+	docker push kabalasu/translator
+
+db-dev:
 	docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=root -e POSTGRES_DB=postgres --name my_postgres my_postgres
 	sleep 10
 	docker exec -e PGPASSWORD=password -it my_postgres  psql -h 127.0.0.1 -p 5432 --user root --dbname postgres
@@ -36,17 +48,12 @@ app-teardown:
 	docker container stop translator
 	docker container rm translator
 
-test:
-	# Additional, optional, tests could go here
-	#python -m pytest -vv --cov=myrepolib tests/*.py
-	#python -m pytest --nbval notebook.ipynb
-
 lint:
 	# See local hadolint install instructions:   https://github.com/hadolint/hadolint
 	# This is linter for Dockerfiles
 	hadolint Dockerfile
 	# This is a linter for Python source code linter: https://www.pylint.org/
 	# This should be run from inside a virtualenv
-	pylint --disable=R,C,W1203 app.py
+	pylint --disable=R,C,W,E1101 app.py
 
 all: install lint test
