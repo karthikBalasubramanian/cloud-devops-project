@@ -10,12 +10,13 @@ app = Flask(__name__)
 LOG = create_logger(app)
 LOG.setLevel(logging.INFO)
 
-db_user = os.environ.get('POSTGRES_DB_USER') or 'root'
-db_password = os.environ.get('POSTGRES_DB_PASSWORD') or 'password'
+db_user = os.environ.get('POSTGRES_USER') or 'root'
+db_password = os.environ.get('POSTGRES_PASSWORD') or 'password'
 db_host = os.environ.get('POSTGRES_SERVICE_HOST') or 'my_postgres'
+db_database = os.environ.get('POSTGRES_DATABASE') or 'postgres'
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgres://{db_user}:{db_password}@{db_host}:5432/postgres'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgres://{db_user}:{db_password}@{db_host}:5432/{db_database}'
 print(app.config['SQLALCHEMY_DATABASE_URI'])
 db = SQLAlchemy(app)
 
@@ -45,6 +46,7 @@ def translate():
         LOG.info(f"Results: \n{result}")
         json_result = [{column: value for column, value in rowproxy.items()}
                        for rowproxy in result]
+        json_result[0]["translated_from"] = "translator_db"
     else:
         json_result = dict()
         json_result["translated_from"] = "google_api"
