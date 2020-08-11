@@ -27,6 +27,7 @@ upload:
 	docker push kabalasu/translator
 
 db-dev:
+	#docker network create mynet
 	docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_USER=root -e POSTGRES_DB=postgres --name my_postgres my_postgres
 	sleep 10
 	docker exec -e PGPASSWORD=password -it my_postgres  psql -h 127.0.0.1 -p 5432 --user root --dbname postgres
