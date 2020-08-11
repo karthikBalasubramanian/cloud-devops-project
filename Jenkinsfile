@@ -31,5 +31,10 @@ pipeline {
         sh 'make upload'
       }
     }
+    stage('Start kubernetes cluster using ansible playbook') {
+      steps {
+        sh 'ansible-playbook -i ~/kubernetes_ansible/inventory ~/kubernetes_ansible/main.yaml'
+      }
+    }
   }
 }
