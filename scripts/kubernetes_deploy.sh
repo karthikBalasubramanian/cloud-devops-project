@@ -1,7 +1,7 @@
 # echo "start a minikube in virtual-box"
-# minikube stop
-# minikube delete
-# minikube start
+minikube stop
+minikube delete
+minikube start
 
 sleep 10
 
