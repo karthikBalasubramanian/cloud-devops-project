@@ -1,43 +1,122 @@
-[![CircleCI](https://circleci.com/gh/karthikBalasubramanian/project-ml-microservice-kubernetes/tree/master.svg?style=svg)](https://app.circleci.com/pipelines/github/karthikBalasubramanian/project-ml-microservice-kubernetes/3/workflows/87c6bc4a-c5c5-4630-a9e3-c6201b1b0096/jobs/3)
+# Translation Service
 
 ## Project Overview
 
-In this project, you will apply the skills you have acquired in this course to operationalize a Machine Learning Microservice API.
+This project comprises of two microservices.
 
-You are given a pre-trained, `sklearn` model that has been trained to predict housing prices in Boston according to several features, such as average rooms in a home and data about highway access, teacher-to-pupil ratios, and so on. You can read more about the data, which was initially taken from Kaggle, on [the data source site](https://www.kaggle.com/c/boston-housing). This project tests your ability to operationalize a Python flask app—in a provided file, `app.py`—that serves out predictions (inference) about housing prices through API calls. This project could be extended to any pre-trained machine learning model, such as those for image recognition and data labeling.
+1. A Flask API microservice which take a `word` of any language and translates to english.
 
-### Project Tasks
+2. `translation` db. The Microservice gets a little intelligent by not calling the Google Translate API everytime because there is a stateful db attached to it called `translation` which maintains a relational table called `transaltor`. So if an encountered word comes in a POST call in the microservice, It gets retrieved from `translation` db.
 
-Your project goal is to operationalize this working, machine learning microservice using [kubernetes](https://kubernetes.io/), which is an open-source system for automating the management of containerized applications. In this project you will:
+### Project Components
 
-- Test your project code using linting
-- Complete a Dockerfile to containerize this application
-- Deploy your containerized application using Docker and make a prediction
-- Improve the log statements in the source code for this application
-- Configure Kubernetes and create a Kubernetes cluster
-- Deploy a container using Kubernetes and make a prediction
-- Upload a complete Github repo with CircleCI to indicate that your code has been tested
+1. Docker images
+   - `kabalasu/my_postgres` - translation db
+   - `kabalasu/translator` - Translation API microservice
+2. Jenkins for CI/CD
+3. Kubernetes for Container orchestration
+4. Ansible Playbook for orchestration deployment
+5. Makefile for dev environment setup
 
-You can find a detailed [project rubric, here](https://review.udacity.com/#!/rubrics/2576/view).
+The end user should need expertise in python, shell, basics of Kubernetes and Ansible to
+get the most out of this project.
 
-**The final implementation of the project will showcase your abilities to operationalize production microservices.**
+### Project setup
 
----
+#### Dev
 
-## Setup the Environment
+prerequisite - Docker and python
 
-- Create a virtualenv and activate it
-- Run `make install` to install the necessary dependencies
+```
+make setup
+make install
+make db-build
+make db-dev
+make app-build
+make app
+sh examples/translate.sh 127.0.0.1 8000 "hola"
+```
 
-### Running `app.py`
+### AWS setup
 
-1. Standalone: `python app.py`
-2. Run in Docker: `./run_docker.sh`
-3. Run in Kubernetes: `./run_kubernetes.sh`
+Amazon EC2 T3 Xlarge with 25 GB of EBS (customized). Make sure you dont run this all day.
 
-### Kubernetes Steps
+### Jenkins in AWS setup
 
-- Setup and Configure Docker locally
-- Setup and Configure Kubernetes locally
-- Create Flask app in Container
-- Run via kubectl
+Please follow `Installing Jenkins` notes in Udacity Devops Nanodegree Program Chapter 4 Build CI/CD Pipelines, Monitoring & Logging - Lesson 1 Continuous Integration and Continuous Deployment - Lecture 10 Installing Jenkins
+
+### Kubernetes
+
+Prerequisites Docker
+
+1. Enter as Jenkins user
+2. Add Jenkins user to Docker group
+3. Use Minikube installation of Docker
+
+### Ansible
+
+1. On jenkins instance install ansible - follow the steps here - https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
+2. copy the codebase in Jenkins home.
+3. chown Jenkins user to execute kubernetes scripts in the codebase.
+4. A very simple implementation of running Kubernetes to localhost with minikube
+   implementation is found here - https://github.com/karthikBalasubramanian/cloud-devops-ansible
+
+### Kubernetes Cluster on AWS cloud
+
+on Aws jenkins ec2 instance as Jenkins user execute this command
+
+```
+minikube tunnel
+```
+
+you will get an output like this
+
+```
+status:
+        machine: minikube
+        pid: 65941
+        route: 10.96.0.0/12 -> 172.17.0.3
+        minikube: Running
+        services: [translator-service]
+    errors:
+                minikube: no errors
+                router: no errors
+                loadbalancer emulator: no errors
+```
+
+where `172.17.0.3` is your exposed node IP
+
+Next step is to get the LoadBalancer Port address and query the translator api.
+
+```
+jenkins@ip-172-31-10-207:~$ kubectl get svc -o wide
+NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE   SELECTOR
+kubernetes           ClusterIP      10.96.0.1       <none>         443/TCP          35m   <none>
+postgres-service     NodePort       10.109.228.84   <none>         5432:31376/TCP   35m   app=postgres
+translator-service   LoadBalancer   10.96.111.45    10.96.111.45   80:30121/TCP     34m   app=translator
+jenkins@ip-172-31-10-207:~$ curl "http://172.17.0.3:30121"
+<h3>Translate App</h3>jenkins@ip-172-31-10-207:~$ sh ~/cloud-devops-project/examples/translate.sh 172.17.0.3 30121 "hola"
+{
+  "result": {
+    "origin": "hola",
+    "origin_language": "es",
+    "translated_from": "google_api",
+    "translation": "Hello",
+    "translation_language": "en"
+  }
+}
+jenkins@ip-172-31-10-207:~$ sh ~/cloud-devops-project/examples/translate.sh 172.17.0.3 30121 "hola"
+{
+  "result": [
+    {
+      "origin": "hola",
+      "origin_language": "es",
+      "translated_from": "translator_db",
+      "translation": "Hello",
+      "translation_language": "en"
+    }
+  ]
+}
+```
+
+please find all the screenshots in `screenshots` folder.
